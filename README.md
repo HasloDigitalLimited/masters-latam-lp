@@ -37,9 +37,28 @@ Things copied from the live site on 10 September 2026 that will not update thems
 
 ## Ad tracking
 
-Any query string on the landing URL (`utm_*`, `fbclid`, `gclid`) is appended to every
-outbound link and to the link between the two pages, so attribution survives the hop to
-the WooCommerce site.
+**Meta Pixel** `1640052390439143` (the same pixel as mexico.mastersevents.com) fires on both
+pages. It is the only third-party request and loads async, so it never blocks rendering.
+Events:
+
+| Event | When |
+|-------|------|
+| `PageView` | page load |
+| `InitiateCheckout` | any "Comprar entradas" button |
+| `Contact` | the WhatsApp button |
+| `ClickToSite` (custom) | any other link to the main site |
+
+Every event carries `page` (`home` or `descuento`), the button `label` and the target `href`.
+Change the ID via `META_PIXEL_ID` at the top of `build.py`.
+
+**Query string pass-through:** any `utm_*`, `fbclid` or `gclid` on the landing URL is
+appended to every outbound link and to the link between the two pages, so the main site's
+own pixel and analytics still see the source.
+
+## What to upload to Cloudflare
+
+Only `index.html`, `descuento/index.html` and the `assets/` folder. `build.py`, this README
+and `_headers` are optional (`_headers` just adds caching if present).
 
 ## Deploy on Cloudflare Pages
 

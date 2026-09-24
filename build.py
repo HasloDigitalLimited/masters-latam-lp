@@ -14,6 +14,7 @@ WA_NUMBER = '12133489759'
 WA_MSG = 'Hola, vengo del anuncio de Transform Trauma México 2027. El sitio no me carga bien. ¿Me pueden ayudar a conseguir mi entrada?'
 WA = 'https://wa.me/%s?text=%s' % (WA_NUMBER, urllib.parse.quote(WA_MSG))
 SITE = 'https://mexico.mastersevents.com'
+META_PIXEL_ID = '1640052390439143'  # same pixel as mexico.mastersevents.com so events land in one ad account
 
 logo = read('assets/ttm-2027-logo.svg').strip()
 logo = re.sub(r'\s+id="[^"]*"', '', logo).replace('<svg ', '<svg role="img" aria-label="Transform Trauma México 2027" ', 1)
@@ -103,7 +104,7 @@ def page(p):
     def card(c):
         return ('<div class="card%s"><span class="tag">%s</span><h3>%s</h3><span class="usd">%s</span>'
                 '<div class="price"><i>Desde</i><b>%s</b><s>%s</s></div>%s<ul>%s</ul>'
-                '<a class="btn %s bl" href="%s" data-out>Comprar entradas</a></div>') % (
+                '<a class="btn %s bl" href="%s" data-out data-buy>Comprar entradas</a></div>') % (
             ' f' if c['featured'] else '', c['tag'], c['title'], c['usd'], c['now'], c['was'],
             '<span class="note">%s</span>' % c['note'] if c.get('note') else '',
             ''.join('<li>%s</li>' % li for li in c['items']), 'pk' if c['featured'] else 'gr', p['buy'])
@@ -120,6 +121,8 @@ def page(p):
 <meta property="og:description" content="{p['desc']}">
 <meta property="og:image" content="{SITE}/wp-content/uploads/2026/05/featured-image-new.jpg">
 <link rel="icon" href="data:,">
+<script>!function(f,b,e,v,n,t,s){{if(f.fbq)return;n=f.fbq=function(){{n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)}};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{META_PIXEL_ID}');fbq('track','PageView');</script>
+<noscript><img height="1" width="1" style="display:none" alt="" src="https://www.facebook.com/tr?id={META_PIXEL_ID}&ev=PageView&noscript=1"></noscript>
 <link rel="preload" href="{p['font']}" as="font" type="font/woff2" crossorigin>
 <style>{CSS.strip().replace('FONTPATH', p['font'])}</style>
 </head>
@@ -135,7 +138,7 @@ def page(p):
   <p class="theme">Sanación a través de diferentes culturas: espiritualidad, saber y práctica</p>
   {p['intro']}<p class="meta">19-20 de febrero de 2027 · Centro de eventos de Tulum, México, y en línea</p>
   <div class="cta">
-    <a class="btn pk bl" href="{p['buy']}" data-out>{p['buy_label']}</a>
+    <a class="btn pk bl" href="{p['buy']}" data-out data-buy>{p['buy_label']}</a>
     <div class="help"><p>¿No carga el sitio? Escríbenos por WhatsApp y te ayudamos a conseguir tu entrada.</p>{wa_btn}</div>
   </div>
 </div></section>
@@ -162,7 +165,18 @@ def page(p):
   <a href="{SITE}/es/privacy-policy/">Política de privacidad</a><a href="{SITE}/es/terms/">Términos y condiciones</a><a href="https://mastersevents.com/">Ver más eventos</a><br>
   Copyright © 2026 Masters Events Ltd · Registrada en Inglaterra y Gales · Número de empresa: 15061102 · Número de IVA: 448 1305 04
 </div></footer>
-<script>(function(){{var q=location.search;if(q.length<2)return;var l=document.querySelectorAll('a[data-out]');for(var i=0;i<l.length;i++)l[i].href+=(l[i].href.indexOf('?')>-1?'&':'?')+q.slice(1)}})()</script>
+<script>(function(){{
+var q=location.search,l=document.querySelectorAll('a[data-out]'),i;
+if(q.length>1)for(i=0;i<l.length;i++)l[i].href+=(l[i].href.indexOf('?')>-1?'&':'?')+q.slice(1);
+function t(){{if(window.fbq)fbq.apply(null,arguments)}}
+document.addEventListener('click',function(e){{
+  var a=e.target.closest&&e.target.closest('a');if(!a)return;
+  var d={{page:'{p['page']}',label:(a.textContent||'').trim(),href:a.href}};
+  if(a.hasAttribute('data-buy'))t('track','InitiateCheckout',d);
+  else if(a.className.indexOf('wa')>-1)t('track','Contact',d);
+  else if(a.hasAttribute('data-out'))t('trackCustom','ClickToSite',d);
+}});
+}})()</script>
 </body>
 </html>
 """
@@ -185,14 +199,14 @@ def desc_last(wa_btn):
     <div class="box"><h3>Entrada virtual</h3><p style="margin:0">Las entradas virtuales LATAM se emiten de buena fe. Se podrá verificar tu elegibilidad y revocar el acceso si no se puede confirmar tu residencia.</p>
     <p style="margin:16px 0 0">¿Dudas sobre tu elegibilidad o problemas para pagar desde tu país? Escríbenos y lo resolvemos contigo.</p></div>
   </div>
-  <div class="acts row"><a class="btn pk" href="{SITE}/es/latam-tickets/" data-out>Comprar entradas con descuento</a><a class="btn ol" href="{SITE}/es/latam-concession/" data-out>Ir al sitio completo</a>{wa_btn}</div>
+  <div class="acts row"><a class="btn pk" href="{SITE}/es/latam-tickets/" data-out data-buy>Comprar entradas con descuento</a><a class="btn ol" href="{SITE}/es/latam-concession/" data-out>Ir al sitio completo</a>{wa_btn}</div>
 </div></section>"""
 
 CE_LI = 'Créditos de desarrollo profesional continuo (CPD) y de educación continua (CE)'
 HOME = dict(
     title='Transform Trauma México 2027 · 19-20 de febrero · Tulum y en línea',
     desc='Llega a México la conferencia sobre trauma más grande del mundo. Aprende de Bessel van der Kolk, Dan Siegel, Richard Schwartz y más. 19-20 de febrero de 2027, Tulum y en línea.',
-    canonical=SITE + '/es/', home='./', font='assets/pjs.woff2', navlink=('Descuento de Latinoamérica', 'descuento/'),
+    canonical=SITE + '/es/', page='home', home='./', font='assets/pjs.woff2', navlink=('Descuento de Latinoamérica', 'descuento/'),
     es=SITE + '/es/', en=SITE + '/', badge='',
     h1='Llega a México la conferencia sobre trauma más grande del mundo', intro='',
     buy=SITE + '/es/tickets/', buy_label='Comprar entradas',
@@ -212,7 +226,7 @@ NOTE = 'Con esta entrada no puedes comprar alojamiento en el lugar del evento.'
 DESC = dict(
     title='Descuento de Latinoamérica · Transform Trauma México 2027',
     desc='Entradas con descuento exclusivo para residentes de Latinoamérica. Transform Trauma México 2027, 19-20 de febrero, Tulum y en línea. Presencial desde US$495, virtual desde US$95.',
-    canonical=SITE + '/es/latam-concession/', home='../', font='../assets/pjs.woff2', navlink=('Inicio', '../'),
+    canonical=SITE + '/es/latam-concession/', page='descuento', home='../', font='../assets/pjs.woff2', navlink=('Inicio', '../'),
     es=SITE + '/es/latam-concession/', en=SITE + '/latam-concession/',
     badge='<span class="badge">Descuento exclusivo para Latinoamérica</span>',
     h1='Llega a México la mayor conferencia del mundo sobre trauma',
